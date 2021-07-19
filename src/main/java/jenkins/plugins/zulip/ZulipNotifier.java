@@ -101,7 +101,9 @@ public class ZulipNotifier extends Publisher implements SimpleBuildStep {
             String message = "";
             // If we are sending to fixed topic, we will want to add project name into the message
             if (ZulipUtil.isValueSet(configuredTopic)) {
-                message += hundsonUrlMesssage("Project: ", build.getParent().getDisplayName(), build.getParent().getUrl(), DESCRIPTOR) + " : ";
+                // Use the FULL display name. In multibranch pipeline jobs,
+                // the display name is just the branch name, so it is not enough to identify the project.
+                message += hundsonUrlMesssage("Project: ", build.getParent().getFullDisplayName(), build.getParent().getUrl(), DESCRIPTOR) + " : ";
             }
             message += hundsonUrlMesssage("Build: ", build.getDisplayName(), build.getUrl(), DESCRIPTOR);
             message += ": ";
@@ -124,7 +126,7 @@ public class ZulipNotifier extends Publisher implements SimpleBuildStep {
             String destinationStream =
                     ZulipUtil.expandVariables(build, listener, ZulipUtil.getDefaultValue(stream, DESCRIPTOR.getStream()));
             String destinationTopic = ZulipUtil.expandVariables(build, listener,
-                    ZulipUtil.getDefaultValue(configuredTopic, build.getParent().getDisplayName()));
+                    ZulipUtil.getDefaultValue(configuredTopic, build.getParent().getFullDisplayName()));
             Zulip zulip = new Zulip(DESCRIPTOR.getUrl(), DESCRIPTOR.getEmail(), DESCRIPTOR.getApiKey());
             zulip.sendStreamMessage(destinationStream, destinationTopic, message);
         }

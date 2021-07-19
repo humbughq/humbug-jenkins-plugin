@@ -115,7 +115,7 @@ public class ZulipNotifierTest {
         when(build.getUrl()).thenReturn("job/TestJob/1");
         when(build.hasChangeSetComputed()).thenReturn(true);
         when(build.getChangeSet()).thenReturn(ChangeLogSet.createEmpty((Run<?, ?>) build));
-        when(job.getDisplayName()).thenReturn("TestJob");
+        when(job.getFullDisplayName()).thenReturn("Folder » TestJob");
         when(job.getUrl()).thenReturn("job/TestJob");
         when(build.getEnvironment(buildListener)).thenReturn(envVars);
         when(envVars.expand(anyString())).thenAnswer(new Answer<String>() {
@@ -139,7 +139,7 @@ public class ZulipNotifierTest {
         verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
         assertEquals("Should use default stream", "defaultStream", streamCaptor.getValue());
         assertEquals("Should use default topic", "defaultTopic", topicCaptor.getValue());
-        assertEquals("Message should be successful build", "**Project: **TestJob : **Build: **#1: **SUCCESS** :check_mark:", messageCaptor.getValue());
+        assertEquals("Message should be successful build", "**Project: **Folder » TestJob : **Build: **#1: **SUCCESS** :check_mark:", messageCaptor.getValue());
         // Test with blank values
         reset(zulip);
         notifier.setStream("");
@@ -156,7 +156,7 @@ public class ZulipNotifierTest {
         when(build.getResult()).thenReturn(Result.FAILURE);
         notifier.perform(build, null, buildListener);
         verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
-        assertEquals("Message should be failed build", "**Project: **TestJob : **Build: **#1: **FAILURE** :cross_mark:", messageCaptor.getValue());
+        assertEquals("Message should be failed build", "**Project: **Folder » TestJob : **Build: **#1: **FAILURE** :cross_mark:", messageCaptor.getValue());
     }
 
     @Test
@@ -166,7 +166,7 @@ public class ZulipNotifierTest {
         when(build.getAction(AbstractTestResultAction.class)).thenReturn(new FakeTestResultAction());
         notifier.perform(build, null, buildListener);
         verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
-        assertEquals("Message should be unstable build", "**Project: **TestJob : **Build: **#1: **UNSTABLE** :warning: (50 broken tests)",
+        assertEquals("Message should be unstable build", "**Project: **Folder » TestJob : **Build: **#1: **UNSTABLE** :warning: (50 broken tests)",
                 messageCaptor.getValue());
     }
 
@@ -189,7 +189,7 @@ public class ZulipNotifierTest {
             Whitebox.setInternalState(ZulipNotifier.class, descMock);
             notifier.perform(build, null, buildListener);
             verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
-            assertEquals("Topic should be project display name", "TestJob", topicCaptor.getValue());
+            assertEquals("Topic should be project's full display name", "Folder » TestJob", topicCaptor.getValue());
             assertEquals("Message should not contain project name", "**Build: **#1: **SUCCESS** :check_mark:", messageCaptor.getValue());
         } finally {
             // Be sure to return global setting back to original setup so other tests dont fail
@@ -208,7 +208,7 @@ public class ZulipNotifierTest {
         ZulipNotifier notifier = new ZulipNotifier();
         notifier.perform(build, null, buildListener);
         verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
-        assertEquals("Message should contain change log", "**Project: **TestJob : **Build: **#1: **SUCCESS** :check_mark:\n" +
+        assertEquals("Message should contain change log", "**Project: **Folder » TestJob : **Build: **#1: **SUCCESS** :check_mark:\n" +
                 "\n" +
                 "Changes since last build:\n" +
                 "\n" +
@@ -225,7 +225,7 @@ public class ZulipNotifierTest {
             notifier.perform(build, null, buildListener);
             verify(zulip).sendStreamMessage(streamCaptor.capture(), topicCaptor.capture(), messageCaptor.capture());
             assertEquals("Message should contain links to Jenkins",
-                    "**Project: **[TestJob](JenkinsUrl/job/TestJob) : **Build: **[#1](JenkinsUrl/job/TestJob/1): **SUCCESS** :check_mark:",
+                    "**Project: **[Folder » TestJob](JenkinsUrl/job/TestJob) : **Build: **[#1](JenkinsUrl/job/TestJob/1): **SUCCESS** :check_mark:",
                     messageCaptor.getValue());
         } finally {
             // Be sure to return global setting back to original setup so other tests dont fail
